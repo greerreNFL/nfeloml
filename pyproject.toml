@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nfeloml"
+version = "0.1.0"
+description = "Portable machine learning models for NFL analytics"
+authors = [
+    {name = "Robert Greer", email = "greerreNFL@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+keywords = ["nfl", "analytics"]
+
+dependencies = [
+    "xgboost>=2.0.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "nfelodcm>=0.1.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/greerreNFL/nfeloml"
+Repository = "https://github.com/greerreNFL/nfeloml"
+Issues = "https://github.com/greerreNFL/nfeloml/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+# doesnt ship non modules automatically. explicitly include them here.
+nfeloml = [
+  "models/*.json", "models/*.ubj",
+  "models/*/*.json", "models/*/*.ubj"
+]
+

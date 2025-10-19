@@ -22,7 +22,7 @@ class WPFeatures(PredictionInput):
     * yardline_100: int - yards to opponent endzone
     * posteam_timeouts_remaining: int - timeouts remaining for possession team
     * defteam_timeouts_remaining: int - timeouts remaining for defense
-    * spread_time: Optional[float] - vegas spread adjusted for time (if available)
+    * spread_time: Optional[float] - vegas spread adjusted for time (defaults to 0 if not provided)
     '''
     receive_2h_ko: int
     home: int

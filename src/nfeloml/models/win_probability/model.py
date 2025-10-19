@@ -16,15 +16,18 @@ class WinProbabilityModel(BaseModel):
     Win Probability model for predicting game outcomes
     '''
     
-    def __init__(self, model_path: Optional[Path] = None, use_spread: bool = False):
+    def __init__(self, model_path: Optional[Path] = None, use_spread: bool = True):
         '''
         Initialize Win Probability model
         
         Params:
         * model_path: Optional[Path] - path to saved model file (if None, loads from package)
-        * use_spread: bool - whether this model uses Vegas spread
+        * use_spread: bool - deprecated, model always uses all features including spread
+        
+        Note: The nflfastr WP model expects all 12 features including spread_time.
+        If spread_time is not available, it will default to 0.
         '''
-        self.use_spread = use_spread
+        self.use_spread = use_spread  # Kept for backward compatibility
         super().__init__(model_path)
     
     def _dict_to_metadata(self, metadata_dict: dict) -> ModelMetadata:
@@ -61,8 +64,10 @@ class WinProbabilityModel(BaseModel):
         if not self.xgb_model:
             raise ValueError("Model not loaded")
         ##  Convert features to DataFrame
+        ##  IMPORTANT: Feature order must match nflfastr model training order
         feature_dict = {
             'receive_2h_ko': [features.receive_2h_ko],
+            'spread_time': [features.spread_time if features.spread_time is not None else 0.0],
             'home': [features.home],
             'half_seconds_remaining': [features.half_seconds_remaining],
             'game_seconds_remaining': [features.game_seconds_remaining],
@@ -74,11 +79,6 @@ class WinProbabilityModel(BaseModel):
             'posteam_timeouts_remaining': [features.posteam_timeouts_remaining],
             'defteam_timeouts_remaining': [features.defteam_timeouts_remaining]
         }
-        ##  Add spread_time if using spread model
-        if self.use_spread:
-            if features.spread_time is None:
-                raise ValueError("spread_time required for spread model")
-            feature_dict['spread_time'] = [features.spread_time]
         df = pd.DataFrame(feature_dict)
         ##  Create DMatrix and predict
         dmatrix = xgb.DMatrix(df)
@@ -96,7 +96,8 @@ class WinProbabilityModel(BaseModel):
         * df: pd.DataFrame - dataframe with columns: receive_2h_ko, home, half_seconds_remaining,
                             game_seconds_remaining, Diff_Time_Ratio, score_differential, down,
                             ydstogo, yardline_100, posteam_timeouts_remaining, 
-                            defteam_timeouts_remaining, (spread_time if use_spread=True)
+                            defteam_timeouts_remaining
+                            Note: spread_time will be auto-added as 0 if not present
         * include_probabilities: bool - (not used for WP, kept for API consistency)
         
         Returns:
@@ -104,16 +105,18 @@ class WinProbabilityModel(BaseModel):
         '''
         if not self.xgb_model:
             raise ValueError("Model not loaded")
-        ##  Select feature columns
+        ##  Select feature columns in nflfastr model order
+        ##  spread_time must be 2nd feature (after receive_2h_ko)
+        if 'spread_time' not in df.columns:
+            ##  If spread_time missing, add it as 0 for compatibility
+            df = df.copy()
+            df['spread_time'] = 0.0
+        
         feature_cols = [
-            'receive_2h_ko', 'home', 'half_seconds_remaining', 'game_seconds_remaining',
+            'receive_2h_ko', 'spread_time', 'home', 'half_seconds_remaining', 'game_seconds_remaining',
             'Diff_Time_Ratio', 'score_differential', 'down', 'ydstogo', 'yardline_100',
             'posteam_timeouts_remaining', 'defteam_timeouts_remaining'
         ]
-        if self.use_spread:
-            if 'spread_time' not in df.columns:
-                raise ValueError("spread_time column required for spread model")
-            feature_cols.append('spread_time')
         X = df[feature_cols]
         ##  Predict
         dmatrix = xgb.DMatrix(X)

@@ -3,7 +3,12 @@ Data loader for Win Probability model
 '''
 import pandas as pd
 import numpy as np
-import nfelodcm as dcm
+
+try:
+    import nfelodcm as dcm
+except ImportError:
+    dcm = None
+
 from nfeloml.core.base_data_loader import BaseDataLoader
 
 class WPDataLoader(BaseDataLoader):
@@ -18,6 +23,11 @@ class WPDataLoader(BaseDataLoader):
         Returns:
         * pd.DataFrame: raw play-by-play data with winner and spreads
         '''
+        if dcm is None:
+            raise ImportError(
+                "nfelodcm is required for training but not installed. "
+                "Install it with: pip install nfelodcm"
+            )
         db = dcm.load(['pbp', 'games'])
         pbp = db['pbp'].copy()
         games = db['games'].copy()
@@ -91,16 +101,20 @@ class WPDataLoader(BaseDataLoader):
         ##  Calculate posteam_spread using raw spread_line
         ##  spread_line: positive when home favored, negative when away favored
         ##  posteam_spread: positive when posteam favored, negative when underdog
+        ##  Always create spread features (fill with 0 if spread_line missing)
         if 'spread_line' in df.columns:
             df['posteam_spread'] = np.where(
                 df['posteam'] == df['home_team'],
                 df['spread_line'],    # home team gets spread_line as-is
                 -df['spread_line']    # away team gets opposite sign
             )
-            ##  Calculate spread_time
-            df['spread_time'] = df['posteam_spread'] * np.exp(
-                -4 * (3600 - df['game_seconds_remaining']) / 3600
-            )
+        else:
+            ##  If no spread_line, default to 0
+            df['posteam_spread'] = 0.0
+        ##  Always calculate spread_time (required for spread model consistency)
+        df['spread_time'] = df['posteam_spread'] * np.exp(
+            -4 * (3600 - df['game_seconds_remaining']) / 3600
+        )
         ##  Create receive_2h_ko properly
         ##  Team that didn't receive opening kickoff receives 2nd half kickoff
         if 'home_opening_kickoff' in df.columns:

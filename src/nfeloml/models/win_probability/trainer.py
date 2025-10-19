@@ -45,23 +45,38 @@ class WPTrainer(BaseTrainer):
         Returns:
         * tuple[pd.DataFrame, pd.Series, None]: feature matrix, labels, and no weights
         '''
-        ##  Define feature columns based on whether spread is used
-        feature_cols = [
-            'receive_2h_ko',
-            'home',
-            'half_seconds_remaining',
-            'game_seconds_remaining',
-            'Diff_Time_Ratio',
-            'score_differential',
-            'down',
-            'ydstogo',
-            'yardline_100',
-            'posteam_timeouts_remaining',
-            'defteam_timeouts_remaining'
-        ]
-        ##  Add spread_time if using spread model
-        if self.wp_config.use_spread and 'spread_time' in data.columns:
-            feature_cols.append('spread_time')
+        ##  Define feature columns in nflfastr model order
+        ##  IMPORTANT: spread_time must be 2nd feature (after receive_2h_ko)
+        if self.wp_config.use_spread:
+            feature_cols = [
+                'receive_2h_ko',
+                'spread_time',  # 2nd position to match nflfastr
+                'home',
+                'half_seconds_remaining',
+                'game_seconds_remaining',
+                'Diff_Time_Ratio',
+                'score_differential',
+                'down',
+                'ydstogo',
+                'yardline_100',
+                'posteam_timeouts_remaining',
+                'defteam_timeouts_remaining'
+            ]
+        else:
+            ##  Non-spread model (11 features)
+            feature_cols = [
+                'receive_2h_ko',
+                'home',
+                'half_seconds_remaining',
+                'game_seconds_remaining',
+                'Diff_Time_Ratio',
+                'score_differential',
+                'down',
+                'ydstogo',
+                'yardline_100',
+                'posteam_timeouts_remaining',
+                'defteam_timeouts_remaining'
+            ]
         ##  Extract features
         X = data[feature_cols].copy()
         ##  Extract labels
@@ -90,8 +105,10 @@ class WPTrainer(BaseTrainer):
         }
         ##  Add monotone constraints for spread model
         if self.wp_config.use_spread:
-            ##  Monotone constraints: positive score diff = higher win prob, etc.
-            params['monotone_constraints'] = "(0, 0, 0, 0, 0, 1, 1, -1, -1, -1, 1, -1)"
+            ##  Monotone constraints matching nflfastr feature order:
+            ##  0=receive_2h_ko, 1=spread_time, 2=home, 3=half_sec, 4=game_sec, 5=Diff_Time_Ratio,
+            ##  6=score_diff, 7=down, 8=ydstogo, 9=yardline_100, 10=posteam_to, 11=defteam_to
+            params['monotone_constraints'] = "(0, -1, 0, 0, 0, 0, 1, 1, -1, -1, -1, 1)"
         return params
     
     def get_num_rounds(self) -> int:

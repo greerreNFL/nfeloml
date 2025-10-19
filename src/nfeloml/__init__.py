@@ -11,7 +11,7 @@ from .models.win_probability.types import WPFeatures, WPPrediction, WPTrainingCo
 from .core.types import ModelMetadata
 from .utils import calculate_epa
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     ##  Expected Points

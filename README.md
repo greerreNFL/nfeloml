@@ -19,6 +19,13 @@
 pip install nfeloml
 ```
 
+**For training models** (not required for inference):
+```bash
+pip install nfeloml[training]
+```
+
+This installs `nfelodcm` which is only needed for training, not for using the pre-trained models.
+
 ## Quick Start
 
 ### Expected Points - DataFrame Inference
@@ -173,6 +180,11 @@ The function automatically:
 ## Model Training
 
 The package provides a complete training pipeline. Models are trained using data from `nfelodcm`.
+
+**Note:** Training requires the optional `nfelodcm` dependency:
+```bash
+pip install nfeloml[training]
+```
 
 ### Training Expected Points Model
 

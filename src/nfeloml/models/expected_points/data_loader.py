@@ -3,7 +3,12 @@ Data loader for Expected Points model
 '''
 import pandas as pd
 import numpy as np
-import nfelodcm as dcm
+
+try:
+    import nfelodcm as dcm
+except ImportError:
+    dcm = None
+
 from nfeloml.core.base_data_loader import BaseDataLoader
 from .utils import create_next_score_labels, add_ep_features
 
@@ -19,6 +24,11 @@ class EPDataLoader(BaseDataLoader):
         Returns:
         * pd.DataFrame: raw play-by-play data
         '''
+        if dcm is None:
+            raise ImportError(
+                "nfelodcm is required for training but not installed. "
+                "Install it with: pip install nfelodcm"
+            )
         db = dcm.load(['pbp'])
         return db['pbp'].copy()
     

@@ -17,7 +17,14 @@ from pathlib import Path
 ##  Add src directory to path for local development
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
-import nfelodcm as dcm
+try:
+    import nfelodcm as dcm
+except ImportError:
+    raise ImportError(
+        "nfelodcm is required for model comparison but not installed. "
+        "Install it with: pip install nfelodcm"
+    )
+
 import pandas as pd
 import numpy as np
 from nfeloml import ExpectedPointsModel

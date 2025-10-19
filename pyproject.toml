@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nfeloml"
-version = "0.1.0"
+version = "0.1.1"
 description = "Portable machine learning models for NFL analytics"
 authors = [
     {name = "Robert Greer", email = "greerreNFL@users.noreply.github.com"}
@@ -18,6 +18,10 @@ dependencies = [
     "xgboost>=2.0.0",
     "pandas>=2.0.0",
     "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+training = [
     "nfelodcm>=0.1.24",
 ]
 

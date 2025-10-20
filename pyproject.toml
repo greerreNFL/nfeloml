@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nfeloml"
-version = "0.1.1"
+version = "0.1.11"
 description = "Portable machine learning models for NFL analytics"
 authors = [
     {name = "Robert Greer", email = "greerreNFL@users.noreply.github.com"}
@@ -39,7 +39,7 @@ include-package-data = true
 [tool.setuptools.package-data]
 # doesnt ship non modules automatically. explicitly include them here.
 nfeloml = [
-  "models/*.json", "models/*.ubj",
-  "models/*/*.json", "models/*/*.ubj"
+  "models/*/trained_model/*.json",
+  "models/*/trained_model/*.ubj"
 ]
 
